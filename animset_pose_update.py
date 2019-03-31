@@ -33,13 +33,18 @@ blendframes2 = []
 blendframes3 = []
 blendframes4 = []
 blendframes_list = []
+ctrl_objs = 'obj_root', 'obj_spine', 'obj_head', 'obj_l_shoulder', 'obj_r_shoulder', 'obj_l_elbow', 'obj_r_elbow', 'obj_l_hand', 'obj_r_hand'
 
 
 def object_selection_ui():
 	
-	cmds.window(title='Animset Pose Update',sizeable=False)
+	cmds.window(title='Animset Pose Update - for MAYA 2018',sizeable=False)
 	cmds.columnLayout("main_column")
-	cmds.textFieldGrp('obj_root', width=500, adj=2, label='COM Ctrl Name', text ="", textChangedCommand = partial(paste_selected_name, 'obj_root') )
+	cmds.rowLayout(nc=2)
+	button_save_naming = cmds.button(label="save", width=30, height=15, c= 'doint_nothing()' )
+	button_load_naming = cmds.button(label="load", width=30, height = 15, c= 'doint_nothing()' ) 
+	cmds.columnLayout (p='main_column')
+	cmds.textFieldGrp('obj_root', width=500, adj=2, label='COM Ctrl Name', text ="", textChangedCommand = partial(paste_selected_name, 'obj_root') )		
 	cmds.textFieldGrp('obj_spine', width=500, adj=2, label='Spine Ctrl Name', text = "", textChangedCommand = partial(paste_selected_name, 'obj_spine') )
 	cmds.textFieldGrp('obj_head', width=500, adj=2, label='Head Ctrl Name', text = "", textChangedCommand = partial(paste_selected_name, 'obj_head') )
 	cmds.textFieldGrp('obj_l_shoulder', width=500, adj=2, label='l_shoulder Ctrl Name', text = "", textChangedCommand = partial(paste_selected_name, 'obj_l_shoulder'))
@@ -87,6 +92,9 @@ def object_selection_ui():
 	cmds.button(button_3,  edit=True, c= partial (proc_folder, checkBox_chk, pose1_chk, pose2_chk, pose3_chk, pose4_chk, checkBox_layer_rmv) ) 	# updating button call function to send checkbox ID to read its value
 	cmds.button(button_4,  edit=True, c= partial (proc_file,   checkBox_chk, pose1_chk, pose2_chk, pose3_chk, pose4_chk, checkBox_layer_rmv) ) 	# updating button call function to send checkbox ID to read its value
 	
+	cmds.button(button_save_naming,  edit=True, c= partial (save_naming_into_file) ) 	
+	cmds.button(button_load_naming,  edit=True, c= partial (load_naming_from_file) ) 	
+	
 	cmds.checkBox (checkBox_layer_rmv, edit=True, changeCommand=partial (button_enabling_logic, button_1, button_2, pose1_chk, pose2_chk, pose3_chk, pose4_chk, checkBox_layer_rmv, checkBox_chk) )
 	cmds.checkBox (pose1_chk, edit=True, changeCommand=partial (button_enabling_logic, button_1, button_2, pose1_chk, pose2_chk, pose3_chk, pose4_chk, checkBox_layer_rmv, checkBox_chk) )
 	cmds.checkBox (pose2_chk, edit=True, changeCommand=partial (button_enabling_logic, button_1, button_2, pose1_chk, pose2_chk, pose3_chk, pose4_chk, checkBox_layer_rmv, checkBox_chk) )
@@ -111,7 +119,8 @@ def update_ctrl_loc_names ():
 	global blendframes1
 	global blendframes2
 	global blendframes3
-	global blendframes4	
+	global blendframes4
+	global ctrl_objs
 	ctrl_names_glob =[] 
 	init_pose_locators_glob =[]  
 	new_pose_locators_glob =[] 
@@ -131,7 +140,6 @@ def update_ctrl_loc_names ():
 	blendframes3 = cmds.textFieldGrp ("frames_pose_3", text=True, q=True)
 	blendframes4 = cmds.textFieldGrp ("frames_pose_4", text=True, q=True)
 	# initializing with ctrl names
-	ctrl_objs = 'obj_root', 'obj_spine', 'obj_head', 'obj_l_shoulder', 'obj_r_shoulder', 'obj_l_elbow', 'obj_r_elbow', 'obj_l_hand', 'obj_r_hand'
 	for ctrl_obj in ctrl_objs:
 		ctrl_names_glob.append ( cmds.textFieldGrp (ctrl_obj, text=True, q=True) )
 	# none empty check
@@ -568,5 +576,26 @@ def paste_selected_name(text_field, *args):
 	selected_obj = cmds.ls (sl=True)
 	cmds.textFieldGrp (text_field, edit=True, text= selected_obj[0].encode('ascii','ignore'))  # weird convertion of unicode to string
 	
+def save_naming_into_file (*args):
+	if update_ctrl_loc_names ():
+		naming_file = open ("c:/naming.txt", "w+")
+		for i, line in enumerate (ctrl_names_glob):
+			naming_file.write (line+ "\r\n")
+		naming_file.close()
+	else:
+		print ("Doing Nothing")
+	
+def load_naming_from_file (*args):
+	cmds.select(clear=True)
+	if os.path.isfile ("c:/naming.txt"):
+		naming_file = open ("c:/naming.txt", "r")
+		file_lines = naming_file.readlines()
+		naming_file.close()			
+		for file_line, ctrl_obj in zip (file_lines, ctrl_objs):
+			cmds.textFieldGrp (ctrl_obj,  edit = True, text=(file_line.replace("\r\n",''))) 
+		update_ctrl_loc_names ()
+	else: 	
+		print ("no naming file found")
+
     
 object_selection_ui() 
