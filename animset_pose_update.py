@@ -5,7 +5,7 @@ from functools import partial
 import maya.cmds as cmds
 import os.path
 
-# some global variables
+# global variables for folders and files
 short_file_name = cmds.file (sceneName=True, shortName=True, q=True)
 long_file_name = cmds.file (sceneName=True, expandName=True, q=True)
 folder_path = long_file_name.replace(short_file_name, "") 
@@ -17,7 +17,9 @@ pose_file_name_1 = subfolder_path + "_pose_1_delta.ma"
 pose_file_name_2 = subfolder_path + "_pose_2_delta.ma"
 pose_file_name_3 = subfolder_path + "_pose_3_delta.ma"
 pose_file_name_4 = subfolder_path + "_pose_4_delta.ma"
+naming_file = subfolder_path + "naming.txt"
 
+# global lists
 ctrl_names_glob =[] 
 init_pose_locators_glob =[]  
 new_pose_locators_glob =[] 
@@ -574,23 +576,25 @@ def doint_nothing():
 	
 def paste_selected_name(text_field, *args):
 	selected_obj = cmds.ls (sl=True)
-	cmds.textFieldGrp (text_field, edit=True, text= selected_obj[0].encode('ascii','ignore'))  # weird convertion of unicode to string
+	if selected_obj :
+		cmds.textFieldGrp (text_field, edit=True, text= selected_obj[0].encode('ascii','ignore'))  # weird convertion of unicode to string
 	
 def save_naming_into_file (*args):
 	if update_ctrl_loc_names ():
-		naming_file = open ("c:/naming.txt", "w+")
+		cmds.sysFile( subfolder_path, makeDir=True )
+		file = open (naming_file, "w+")
 		for i, line in enumerate (ctrl_names_glob):
-			naming_file.write (line+ "\r\n")
-		naming_file.close()
+			file.write (line+ "\r\n")
+		file.close()
 	else:
 		print ("Doing Nothing")
 	
 def load_naming_from_file (*args):
 	cmds.select(clear=True)
-	if os.path.isfile ("c:/naming.txt"):
-		naming_file = open ("c:/naming.txt", "r")
-		file_lines = naming_file.readlines()
-		naming_file.close()			
+	if os.path.isfile (naming_file):
+		file = open (naming_file, "r")
+		file_lines = file.readlines()
+		file.close()			
 		for file_line, ctrl_obj in zip (file_lines, ctrl_objs):
 			cmds.textFieldGrp (ctrl_obj,  edit = True, text=(file_line.replace("\r\n",''))) 
 		update_ctrl_loc_names ()
