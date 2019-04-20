@@ -104,6 +104,16 @@ def object_selection_ui():
 	cmds.checkBox (pose4_chk, edit=True, changeCommand=partial (button_enabling_logic, button_1, button_2, pose1_chk, pose2_chk, pose3_chk, pose4_chk, checkBox_layer_rmv, checkBox_chk) )
 	cmds.showWindow()
 	
+def curve_filter (objectName, layerName):
+	sublist = range(97, 123)[::-1]   #reverse alphabet itteration
+	for letter in map(chr, sublist):      
+		fullNameX = objectName + "_rotate_" + layerName + ".input" + letter.upper() + "X"
+		fullNameY = objectName + "_rotate_" + layerName + ".input" + letter.upper() + "Y"
+		fullNameZ = objectName + "_rotate_" + layerName + ".input" + letter.upper() + "Z"
+		print ("trying: " + fullNameX)
+		if cmds.objExists(fullNameX):
+			cmds.filterCurve ( fullNameX, fullNameY, fullNameZ )	
+	
 def update_ctrl_loc_names ():
 	# declaring global vars and reseting them
 	global ctrl_names_glob
@@ -532,6 +542,8 @@ def paste_poses_by_settings (pose_enum_start, pose_enum_end, frame_offset_start,
 	if cmds.checkBox (checkBox_chk, value=True, q=True):
 		cmds.currentTime (cmds.playbackOptions( minTime=True, q=True ))
 		l_hand_to_r_hand_const (checkBox_chk)
+	for ctrl_name in ctrl_names_glob:  #euler filtering
+		curve_filter (ctrl_name,new_layer_name_string_glob)
 		
 # returns prefix indexes in list in  the file name	
 def recognize_file_prefixes (file_name, prefix_list):
@@ -603,3 +615,4 @@ def load_naming_from_file (*args):
 
     
 object_selection_ui() 
+
