@@ -72,18 +72,18 @@ def object_selection_ui():
 	cmds.columnLayout (p='main_column')
 	cmds.rowLayout(nc=3)
 	pose2_chk = cmds.checkBox (label="pose 2", value = False, en=False, width=60)
-	cmds.textFieldGrp('file_prefix_2', label='file prefix detect: ', text ="walk", en=True,  adj=2, width=288, columnAttach2 = ('left','left'), columnOffset2 = (0,-50) )
-	cmds.textFieldGrp('frames_pose_2', label='frames to blend Inital pose', text ="0", en=True, width=140, columnAttach2 = ('left','left'), columnOffset2 = (-50,-50))
+	cmds.textFieldGrp('file_prefix_2', label='file prefix detect: ', text ="walk", en=False,  adj=2, width=288, columnAttach2 = ('left','left'), columnOffset2 = (0,-50) )
+	cmds.textFieldGrp('frames_pose_2', label='frames to blend Inital pose', text ="0", en=False, width=140, columnAttach2 = ('left','left'), columnOffset2 = (-50,-50))
 	cmds.columnLayout (p='main_column')
 	cmds.rowLayout(nc=3)
 	pose3_chk = cmds.checkBox (label="pose 3", value = False, en=False, width=60)
-	cmds.textFieldGrp('file_prefix_3', label='file prefix detect: ', text ="jog", en=True,  adj=2, width=288, columnAttach2 = ('left','left'), columnOffset2 = (0,-50) )
-	cmds.textFieldGrp('frames_pose_3', label='frames to blend Inital pose', text ="0", en=True, width=140, columnAttach2 = ('left','left'), columnOffset2 = (-50,-50))
+	cmds.textFieldGrp('file_prefix_3', label='file prefix detect: ', text ="jog", en=False,  adj=2, width=288, columnAttach2 = ('left','left'), columnOffset2 = (0,-50) )
+	cmds.textFieldGrp('frames_pose_3', label='frames to blend Inital pose', text ="0", en=False, width=140, columnAttach2 = ('left','left'), columnOffset2 = (-50,-50))
 	cmds.columnLayout (p='main_column')
 	cmds.rowLayout(nc=3)
 	pose4_chk = cmds.checkBox (label="pose 4", value = False, en=False, width=60)
-	cmds.textFieldGrp('file_prefix_4', label='file prefix detect: ', text ="sprint", en=True,  adj=2, width=288, columnAttach2 = ('left','left'), columnOffset2 = (0,-50) )
-	cmds.textFieldGrp('frames_pose_4', label='frames to blend Inital pose', text ="0", en=True, width=140, columnAttach2 = ('left','left'), columnOffset2 = (-50,-50))	
+	cmds.textFieldGrp('file_prefix_4', label='file prefix detect: ', text ="sprint", en=False,  adj=2, width=288, columnAttach2 = ('left','left'), columnOffset2 = (0,-50) )
+	cmds.textFieldGrp('frames_pose_4', label='frames to blend Inital pose', text ="0", en=False, width=140, columnAttach2 = ('left','left'), columnOffset2 = (-50,-50))	
 #----------------- UI Events Assign --------------------------------------------------------------------------------------------------------		
 	cmds.button(button_1,  edit=True, c= partial (init_pose, button_1, button_2, pose1_chk, pose2_chk, pose3_chk, pose4_chk, checkBox_layer_rmv, checkBox_chk) )  # updating button call function to send buttons ID as argument to enable it
 	cmds.button(button_2,  edit=True, en=False, c= partial (new_pose, button_1, button_2, pose1_chk, pose2_chk, pose3_chk, pose4_chk, checkBox_layer_rmv, checkBox_chk) ) # updating button call function to send buttons IDs
@@ -179,8 +179,6 @@ def init_pose(button_1, button_2, pose1_chk, pose2_chk, pose3_chk, pose4_chk, ch
 def new_pose(button_1, button_2,pose1_chk, pose2_chk, pose3_chk, pose4_chk, checkBox_layer_rmv, checkBox_chk, *args):
 	# reinitialize names to prevent user from changing it
 	if update_ctrl_loc_names ():
-		#cmds.button(button_2, edit=True, en=False)
-		#cmds.button(button_1, edit=True, en=True)
 		# alinging locators to the new pose
 		for new_pose_locator, ctrl_name in zip (new_pose_locators_glob, ctrl_names_glob):
 			cmds.delete (cmds.parentConstraint (ctrl_name, new_pose_locator))
@@ -233,7 +231,7 @@ def proc_folder(checkBox_chk, pose1_chk, pose2_chk, pose3_chk, pose4_chk, checkB
 #--------------------------------------------------------------------------------------------------------------------------------------------	
 def proc_file(checkBox_chk, pose1_chk, pose2_chk, pose3_chk, pose4_chk, checkBox_layer_rmv,  *args):
 	# checking file exists
-	#if not os.path.isfile (pose_file_name):  #replace it with load_file fuction
+	#if not os.path.isfile (pose_file_name): 
 	if not check_pose_files_by_settings (pose1_chk, pose2_chk, pose3_chk, pose4_chk):
 		cmds.confirmDialog( title='No Pose File Created', message='Please, use Pick Poses buttons first', button=['Ok'], defaultButton='Ok' )
 	else:
@@ -251,9 +249,9 @@ def proc_file(checkBox_chk, pose1_chk, pose2_chk, pose3_chk, pose4_chk, checkBox
 			else:
 				frame_offset_2 = frame_offset_1								
 			if not poses_indexes[0]:
-				paste_poses_by_settings(1, 1, frame_offset_1, frame_offset_2, checkBox_layer_rmv, checkBox_chk)                        
+				paste_poses_by_settings(1, 1, frame_offset_1, frame_offset_2, checkBox_layer_rmv, checkBox_chk)  
 			if (poses_indexes[0] and (not poses_indexes[1])):
-				paste_poses_by_settings(poses_indexes[0], poses_indexes[0], frame_offset_1, frame_offset_2, checkBox_layer_rmv, checkBox_chk)                        						
+				paste_poses_by_settings(poses_indexes[0], poses_indexes[0], frame_offset_1, frame_offset_2, checkBox_layer_rmv, checkBox_chk) 			
 			if (poses_indexes[0] and poses_indexes[1]):
 				paste_poses_by_settings(poses_indexes[0], poses_indexes[1], frame_offset_1, frame_offset_2, checkBox_layer_rmv, checkBox_chk)                  		
 #--------------------------------------------------------------------------------------------------------------------------------------------					
@@ -322,6 +320,7 @@ def button_enabling_logic (init_pose_button, new_pose_button, pose1_chk, pose2_c
 			#print ("mask from settings:  chk_bx: "+b1+b2+b3+b4+"   files: "+f1+f2+f3+f4+ "   pose create in progress:  "+pose_create_in_progress)
 			str_mask_settings = (str(b1)+str(b2)+str(b3)+str(b4)+" "+str(f1)+str(f2)+str(f3)+str(f4))
 			return_map = {
+			        "0000 0000" : [1,0,0,0],
 				"1000 0000" : [1,0,0,0],
 				"1000 1000" : [1,1,0,0],
 				"1100 1000" : [1,1,0,0],
@@ -330,6 +329,7 @@ def button_enabling_logic (init_pose_button, new_pose_button, pose1_chk, pose2_c
 			        "1110 1110" : [1,1,1,1],
 			        "1111 1110" : [1,1,1,1],			        
 			        "1111 1111" : [1,1,1,1],
+			        "0000 1111" : [1,0,0,0],
 			        "1000 1111" : [1,1,0,0],
 			        "1100 1111" : [1,1,1,0],
 			        "1110 1111" : [1,1,1,1],
@@ -440,11 +440,15 @@ def paste_poses_by_settings (pose_enum_start, pose_enum_end, frame_offset_start,
 	#-----------------------------------------
 	def pasting_procedure (frame):			
 		# align COMs
-		cmds.currentTime (frame)  	
+		cmds.currentTime (frame)  		
+		cmds.cutKey (init_pose_locators_glob) # deleting keys for last frame offests fixes 
+		cmds.cutKey (new_pose_locators_glob)  # deleting keys for last frame offests fixes 
 		cmds.delete (cmds.pointConstraint (ctrl_names_glob[0], init_pose_locators_glob[0]))
 		cmds.delete (cmds.orientConstraint (ctrl_names_glob[0], init_pose_locators_glob[0], skip=['x','z']))
 		cmds.delete (cmds.pointConstraint (ctrl_names_glob[0], new_pose_locators_glob[0]))
 		cmds.delete (cmds.orientConstraint (ctrl_names_glob[0], new_pose_locators_glob[0], skip=['x','z']))
+		#cmds.setKeyframe ( init_pose_locators_glob, al = new_layer_name_string_glob)
+		#cmds.setKeyframe ( new_pose_locators_glob, al = new_layer_name_string_glob)		
 		# parenting ctrls to init pose locators
 		iter_ctrl_names = iter (ctrl_names_glob) # iterator to skip parenting roots
 		iter_init_pose_locators = iter (init_pose_locators_glob)
@@ -452,7 +456,7 @@ def paste_poses_by_settings (pose_enum_start, pose_enum_end, frame_offset_start,
 		next (iter_init_pose_locators)
 		for ctrl_name, init_pose_locator in zip(iter_ctrl_names,iter_init_pose_locators):
 			#cmds.parentConstraint (init_pose_locator, ctrl_name, maintainOffset=True, name = "init_pose_contraint_") # adding labeled constraints to delete them later
-			# deleting non-referenced constraints
+			#   non-referenced constraints
 			constr_list = cmds.listConnections (ctrl_name,  type="constraint")
 			delete_constr_list = []
 			if constr_list:
@@ -472,7 +476,7 @@ def paste_poses_by_settings (pose_enum_start, pose_enum_end, frame_offset_start,
 			cmds.delete (cmds.parentConstraint (new_pose_locator, init_pose_locator))
 		# keying ctrls and deleting constraints
 		cmds.setKeyframe ( ctrl_names_glob, al = new_layer_name_string_glob)
-		#cmds.delete (cmds.ls ("init_pose_contraint_") )  #deleting  constrants
+		cmds.delete (cmds.ls ("init_pose_contraint_") )  #deleting  constrants
 		cmds.delete (cmds.ls ("init_pos_contraint_") )
 		cmds.delete (cmds.ls ("init_rot_contraint_") )
 	#--------------------------------------------
@@ -503,7 +507,7 @@ def paste_poses_by_settings (pose_enum_start, pose_enum_end, frame_offset_start,
 		cmds.setKeyframe ( ctrl_names_glob, al = new_layer_name_string_glob)
 	if pose_enum_start:
 		load_pose_file (pose_enum_start)
-		pasting_procedure ( cmds.playbackOptions( minTime=True, q=True ) )			
+		pasting_procedure ( cmds.playbackOptions( minTime=True, q=True ))			
 		cmds.delete (init_pose_locators_glob)
 		cmds.delete (new_pose_locators_glob)
 		# deleting namespace
@@ -512,13 +516,13 @@ def paste_poses_by_settings (pose_enum_start, pose_enum_end, frame_offset_start,
 		cmds.currentTime ( cmds.playbackOptions( minTime=True, q=True ) ) #updating viewport		
 	if pose_enum_end: # always runs to ensure offset on character turn
 		load_pose_file (pose_enum_end)
-		pasting_procedure ( cmds.playbackOptions( maxTime=True, q=True ) )
+		pasting_procedure ( cmds.playbackOptions( maxTime=True, q=True ))
 		cmds.delete (init_pose_locators_glob)
 		cmds.delete (new_pose_locators_glob)	
 		# deleting namespace
 		cmds.namespace( set=':' )
 		cmds.namespace( rm=locators_namespace, deleteNamespaceContent = True )		
-		cmds.currentTime ( cmds.playbackOptions( minTime=True, q=True ) ) #updating viewport		
+		cmds.currentTime ( cmds.playbackOptions( maxTime=True, q=True ) ) #updating viewport		
 	if cmds.checkBox (checkBox_chk, value=True, q=True):
 		cmds.currentTime (cmds.playbackOptions( minTime=True, q=True ))
 		l_hand_to_r_hand_const (checkBox_chk)
@@ -590,6 +594,7 @@ def load_naming_from_file (*args):
 		for file_line, ctrl_obj in zip (file_lines, ctrl_objs):
 			cmds.textFieldGrp (ctrl_obj,  edit = True, text=(file_line.replace("\r\n",''))) 
 		update_ctrl_loc_names ()
+		#button_enabling_logic (button_1, button_2, pose1_chk, pose2_chk, pose3_chk, pose4_chk, checkBox_layer_rmv, checkBox_chk)
 	else: 	
 		print ("no naming file found")
 #--------------------------------------------------------------------------------------------------------------------------------------------	
