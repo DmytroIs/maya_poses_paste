@@ -1,6 +1,6 @@
 #----------------- debug lib ---------------------------------------------------------------------------------------------------------------------
-import wingdbstub
-wingdbstub.Ensure()
+#import wingdbstub
+#wingdbstub.Ensure()
 #----------------- Main inludes ------------------------------------------------------------------------------------------------------------------
 from functools import partial
 import maya.cmds as cmds
@@ -34,6 +34,8 @@ blendframes3 = []
 blendframes4 = []
 blendframes_list = []
 ctrl_objs = 'obj_root', 'obj_spine', 'obj_head', 'obj_l_shoulder', 'obj_r_shoulder', 'obj_l_elbow', 'obj_r_elbow', 'obj_l_hand', 'obj_r_hand'
+ctrl_l_fngrs = 'f_l_bone_01','f_l_bone_02','f_l_bone_03','f_l_bone_11','f_l_bone_12','f_l_bone_13','f_l_bone_21','f_l_bone_22','f_l_bone_23','f_l_bone_31','f_l_bone_32','f_l_bone_33','f_l_bone_41','f_l_bone_42','f_l_bone_43'
+ctrl_r_fngrs = 'f_r_bone_01','f_r_bone_02','f_r_bone_03','f_r_bone_11','f_r_bone_12','f_r_bone_13','f_r_bone_21','f_r_bone_22','f_r_bone_23','f_r_bone_31','f_r_bone_32','f_r_bone_33','f_r_bone_41','f_r_bone_42','f_r_bone_43'
 #------------------- MAIN WINDOW ---------------------------------------------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
 l_fngr_wnd = []
@@ -676,8 +678,10 @@ def load_naming_from_file (*args):
 def fingers_enabled (flag,*args):
 	if (flag=='l'):
 		l_fingers_selection_ui()
+		add_finger ('l')
 	elif (flag =='r'):
 		r_fingers_selection_ui()
+		add_finger ('r')
 	
 #--------------------------------------------------------------------------------------------------------------------------------------------	
 def fingers_disabled (flag, *args):
@@ -686,6 +690,20 @@ def fingers_disabled (flag, *args):
 		cmds.window(l_fngr_wnd, edit = True, vis= False)
 	elif (flag =='r'):
 		cmds.window(r_fngr_wnd, edit = True, vis= False)
+	reset_ctrl_objs ()
+#--------------------------------------------------------------------------------------------------------------------------------------------
+def add_finger (side):
+	global ctrl_objs
+	global ctrl_l_fngrs
+	global ctrl_r_fngrs
+	if (side == "l"):
+		ctrl_objs = ctrl_objs + ctrl_l_fngrs
+	elif (side == "r"):
+		ctrl_objs = ctrl_objs + ctrl_r_fngrs
+#--------------------------------------------------------------------------------------------------------------------------------------------
+def reset_ctrl_objs ():
+	global ctrl_objs
+	ctrl_objs = 'obj_root', 'obj_spine', 'obj_head', 'obj_l_shoulder', 'obj_r_shoulder', 'obj_l_elbow', 'obj_r_elbow', 'obj_l_hand', 'obj_r_hand'	
 #--------------------------------------------------------------------------------------------------------------------------------------------
 
 object_selection_ui() 
