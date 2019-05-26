@@ -1,6 +1,6 @@
 #----------------- debug lib ---------------------------------------------------------------------------------------------------------------------
-#import wingdbstub
-#wingdbstub.Ensure()
+import wingdbstub
+wingdbstub.Ensure()
 #----------------- Main inludes ------------------------------------------------------------------------------------------------------------------
 from functools import partial
 import maya.cmds as cmds
@@ -34,28 +34,46 @@ blendframes3 = []
 blendframes4 = []
 blendframes_list = []
 ctrl_objs = 'obj_root', 'obj_spine', 'obj_head', 'obj_l_shoulder', 'obj_r_shoulder', 'obj_l_elbow', 'obj_r_elbow', 'obj_l_hand', 'obj_r_hand'
+ctrl_extra_objs = 'extra_bone_01', 'extra_bone_02', 'extra_bone_03', 'extra_bone_04', 'extra_bone_05'
 ctrl_l_fngrs = 'f_l_bone_01','f_l_bone_02','f_l_bone_03','f_l_bone_11','f_l_bone_12','f_l_bone_13','f_l_bone_21','f_l_bone_22','f_l_bone_23','f_l_bone_31','f_l_bone_32','f_l_bone_33','f_l_bone_41','f_l_bone_42','f_l_bone_43'
 ctrl_r_fngrs = 'f_r_bone_01','f_r_bone_02','f_r_bone_03','f_r_bone_11','f_r_bone_12','f_r_bone_13','f_r_bone_21','f_r_bone_22','f_r_bone_23','f_r_bone_31','f_r_bone_32','f_r_bone_33','f_r_bone_41','f_r_bone_42','f_r_bone_43'
 #------------------- MAIN WINDOW ---------------------------------------------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
+main_wnd = []
 l_fngr_wnd = []
 r_fngr_wnd = []
-def object_selection_ui():	
-	cmds.window(title='Animset Pose Update - for MAYA 2018',sizeable=False)
+extra_bones_wnd = []
+textfields_main = []
+textfields_extra = []
+textfields_l_fingers = []
+textfields_r_fingers = []
+
+def full_path_textField (window_column):
+	return lambda obj_name: window_column +'|'+ obj_name
+
+def object_selection_ui():
+	global main_wnd
+	global textfields_main
+	main_wnd = cmds.window(title='Animset Pose Update:  MAYA 2017-2018',sizeable=False)
 	cmds.columnLayout("main_column")
-	cmds.rowLayout(nc=2)
+	cmds.rowLayout(nc=6)
 	button_save_naming = cmds.button(label="save", width=30, height=15, c= 'doint_nothing()' )
 	button_load_naming = cmds.button(label="load", width=30, height = 15, c= 'doint_nothing()' ) 
-	cmds.columnLayout (p='main_column')
-	cmds.textFieldGrp('obj_root', width=500, adj=2, label='COM Ctrl Name', text ="", textChangedCommand = partial(paste_selected_name, 'obj_root') )		
-	cmds.textFieldGrp('obj_spine', width=500, adj=2, label='Spine Ctrl Name', text = "", textChangedCommand = partial(paste_selected_name, 'obj_spine') )
-	cmds.textFieldGrp('obj_head', width=500, adj=2, label='Head Ctrl Name', text = "", textChangedCommand = partial(paste_selected_name, 'obj_head') )
-	cmds.textFieldGrp('obj_l_shoulder', width=500, adj=2, label='l_shoulder Ctrl Name', text = "", textChangedCommand = partial(paste_selected_name, 'obj_l_shoulder'))
-	cmds.textFieldGrp('obj_r_shoulder', width=500, adj=2, label='r_shoulder Ctrl Name', text = "", textChangedCommand = partial(paste_selected_name, 'obj_r_shoulder'))
-	cmds.textFieldGrp('obj_l_elbow', width=500, adj=2, label='l_elbow Ctrl Name', text = "", textChangedCommand = partial(paste_selected_name, 'obj_l_elbow'))
-	cmds.textFieldGrp('obj_r_elbow', width=500, adj=2, label='r_elbow Ctrl Name', text = "", textChangedCommand = partial(paste_selected_name, 'obj_r_elbow'))
-	cmds.textFieldGrp('obj_l_hand',width=500, adj=2, label='l_hand Ctrl Name', text = "", textChangedCommand = partial(paste_selected_name, 'obj_l_hand'))
-	cmds.textFieldGrp('obj_r_hand',width=500, adj=2, label='r_hand Ctrl Name', text = "", textChangedCommand = partial(paste_selected_name, 'obj_r_hand'))
+	fngr_section = cmds.text( label='extra bones:   ',  width=180, al='right')
+	extra_bones_chkbx = cmds.checkBox (label="spine ctrl",  value = False, en=True, width=80)
+	l_fngr_wnd_chkbx  = cmds.checkBox (label="left fingers",  value = False, en=True, width=80)
+	r_fngr_wnd_chkbx  = cmds.checkBox (label="right fingers", value = False, en=True, width=80)			
+	textfields_main = cmds.columnLayout (p='main_column')
+	obj_full_path = full_path_textField (textfields_main)
+	cmds.textFieldGrp('obj_root', width=500, adj=2, label='COM Ctrl Name', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('obj_root')))		
+	cmds.textFieldGrp('obj_spine', width=500, adj=2, label='Spine Ctrl Name', text = "", textChangedCommand = partial(paste_selected_name, obj_full_path('obj_spine')) )
+	cmds.textFieldGrp('obj_head', width=500, adj=2, label='Head Ctrl Name', text = "", textChangedCommand = partial(paste_selected_name, obj_full_path('obj_head')))
+	cmds.textFieldGrp('obj_l_shoulder', width=500, adj=2, label='l_shoulder Ctrl Name', text = "", textChangedCommand = partial(paste_selected_name, obj_full_path('obj_l_shoulder')))
+	cmds.textFieldGrp('obj_r_shoulder', width=500, adj=2, label='r_shoulder Ctrl Name', text = "", textChangedCommand = partial(paste_selected_name, obj_full_path('obj_r_shoulder')))
+	cmds.textFieldGrp('obj_l_elbow', width=500, adj=2, label='l_elbow Ctrl Name', text = "", textChangedCommand = partial(paste_selected_name, obj_full_path('obj_l_elbow')))
+	cmds.textFieldGrp('obj_r_elbow', width=500, adj=2, label='r_elbow Ctrl Name', text = "", textChangedCommand = partial(paste_selected_name, obj_full_path('obj_r_elbow')))
+	cmds.textFieldGrp('obj_l_hand',width=500, adj=2, label='l_hand Ctrl Name', text = "", textChangedCommand = partial(paste_selected_name, obj_full_path('obj_l_hand')))
+	cmds.textFieldGrp('obj_r_hand',width=500, adj=2, label='r_hand Ctrl Name', text = "", textChangedCommand = partial(paste_selected_name, obj_full_path('obj_r_hand')))
 	cmds.rowLayout(nc=5)
 	button_1 = cmds.button(label="Pick Initial Pose", width=100, c= 'doint_nothing()' ) 	
 	button_2 = cmds.button(label="Pick New Pose", width=100, c= 'doint_nothing()')
@@ -89,11 +107,7 @@ def object_selection_ui():
 	pose4_chk = cmds.checkBox (label="pose 4", value = False, en=False, width=60)
 	cmds.textFieldGrp('file_prefix_4', label='file prefix detect: ', text ="sprint", en=False,  adj=2, width=288, columnAttach2 = ('left','left'), columnOffset2 = (0,-50) )
 	cmds.textFieldGrp('frames_pose_4', label='frames to blend Inital pose', text ="0", en=False, width=140, columnAttach2 = ('left','left'), columnOffset2 = (-50,-50))	
-	cmds.columnLayout (p='main_column')
-	cmds.rowLayout(nc=3, h=15)
-	fngr_section = cmds.text( label='extra bones:   ',  width=310, al='right')
-	l_fngr_wnd_chkbx = cmds.checkBox (label="left fingers",  value = False, en=True, width=80)
-	r_fngr_wnd_chkbx = cmds.checkBox (label="right fingers", value = False, en=True, width=80)	
+
 #----------------- UI Events Assign --------------------------------------------------------------------------------------------------------		
 	cmds.button(button_1,  edit=True, c= partial (init_pose, button_1, button_2, pose1_chk, pose2_chk, pose3_chk, pose4_chk, checkBox_layer_rmv, checkBox_chk) )  # updating button call function to send buttons ID as argument to enable it
 	cmds.button(button_2,  edit=True, en=False, c= partial (new_pose, button_1, button_2, pose1_chk, pose2_chk, pose3_chk, pose4_chk, checkBox_layer_rmv, checkBox_chk) ) # updating button call function to send buttons IDs
@@ -106,73 +120,101 @@ def object_selection_ui():
 	cmds.checkBox (pose2_chk, edit=True, changeCommand=partial (button_enabling_logic, button_1, button_2, pose1_chk, pose2_chk, pose3_chk, pose4_chk, checkBox_layer_rmv, checkBox_chk) )
 	cmds.checkBox (pose3_chk, edit=True, changeCommand=partial (button_enabling_logic, button_1, button_2, pose1_chk, pose2_chk, pose3_chk, pose4_chk, checkBox_layer_rmv, checkBox_chk) )
 	cmds.checkBox (pose4_chk, edit=True, changeCommand=partial (button_enabling_logic, button_1, button_2, pose1_chk, pose2_chk, pose3_chk, pose4_chk, checkBox_layer_rmv, checkBox_chk) )
-	cmds.checkBox (l_fngr_wnd_chkbx, edit=True, onCommand = partial(fingers_enabled, 'l'), offCommand = partial(fingers_disabled, 'l'))
-	cmds.checkBox (r_fngr_wnd_chkbx, edit=True, onCommand = partial(fingers_enabled, 'r'), offCommand = partial(fingers_disabled, 'r'))
+	cmds.checkBox (extra_bones_chkbx,  edit=True, onCommand = partial(fingers_enabled, 'extra'), offCommand = partial(fingers_disabled, 'extra'))
+	cmds.checkBox (l_fngr_wnd_chkbx, edit=True, onCommand = partial(fingers_enabled, 'l'),       offCommand = partial(fingers_disabled, 'l'))
+	cmds.checkBox (r_fngr_wnd_chkbx, edit=True, onCommand = partial(fingers_enabled, 'r'),       offCommand = partial(fingers_disabled, 'r'))
 	cmds.showWindow()
 #--------------------------------------------------------------------------------------------------------------------------------------------			
 def l_fingers_selection_ui():
 	global l_fngr_wnd
-	l_fngr_wnd=cmds.window(title='Left Hand Fingers',sizeable=False)
+	global textfields_l_fingers
+	textfields_l_fingers = []
+	l_fngr_wnd=cmds.window(title='Left Hand Fingers',sizeable=False, closeCommand= partial(fingers_disabled, 'l'))
 	cmds.columnLayout("l_fingers_tab")
-	cmds.rowLayout(nc=3)
-	cmds.textFieldGrp('f_l_bone_01', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, 'f_l_bone_01'),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
-	cmds.textFieldGrp('f_l_bone_02', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, 'f_l_bone_02'),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
-	cmds.textFieldGrp('f_l_bone_03', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, 'f_l_bone_03'),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
+	textfields_l_fingers.append (cmds.rowLayout(nc=3))
+	obj_full_path = full_path_textField (textfields_l_fingers[0])
+	cmds.textFieldGrp('f_l_bone_01', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('f_l_bone_01')),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
+	cmds.textFieldGrp('f_l_bone_02', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('f_l_bone_02')),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
+	cmds.textFieldGrp('f_l_bone_03', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('f_l_bone_03')),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
 	cmds.columnLayout(p="l_fingers_tab")                          
-	cmds.rowLayout(nc=3)                                      
-	cmds.textFieldGrp('f_l_bone_11', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, 'f_l_bone_11'),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
-	cmds.textFieldGrp('f_l_bone_12', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, 'f_l_bone_12'),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
-	cmds.textFieldGrp('f_l_bone_13', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, 'f_l_bone_13'),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
+	textfields_l_fingers.append (cmds.rowLayout(nc=3))
+	obj_full_path = full_path_textField (textfields_l_fingers[1])
+	cmds.textFieldGrp('f_l_bone_11', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('f_l_bone_11')),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
+	cmds.textFieldGrp('f_l_bone_12', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('f_l_bone_12')),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
+	cmds.textFieldGrp('f_l_bone_13', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('f_l_bone_13')),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
 	cmds.columnLayout(p="l_fingers_tab")                          
-	cmds.rowLayout(nc=3)                                      
-	cmds.textFieldGrp('f_l_bone_21', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, 'f_l_bone_21'),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
-	cmds.textFieldGrp('f_l_bone_22', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, 'f_l_bone_22'),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
-	cmds.textFieldGrp('f_l_bone_23', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, 'f_l_bone_23'),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
+	textfields_l_fingers.append (cmds.rowLayout(nc=3))    
+	obj_full_path = full_path_textField (textfields_l_fingers[2])
+	cmds.textFieldGrp('f_l_bone_21', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('f_l_bone_21')),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
+	cmds.textFieldGrp('f_l_bone_22', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('f_l_bone_22')),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
+	cmds.textFieldGrp('f_l_bone_23', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('f_l_bone_23')),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
 	cmds.columnLayout(p="l_fingers_tab")                          
-	cmds.rowLayout(nc=3)                                      
-	cmds.textFieldGrp('f_l_bone_31', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, 'f_l_bone_31'),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
-	cmds.textFieldGrp('f_l_bone_32', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, 'f_l_bone_32'),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
-	cmds.textFieldGrp('f_l_bone_33', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, 'f_l_bone_33'),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
+	textfields_l_fingers.append (cmds.rowLayout(nc=3)) 
+	obj_full_path = full_path_textField (textfields_l_fingers[3])
+	cmds.textFieldGrp('f_l_bone_31', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('f_l_bone_31')),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
+	cmds.textFieldGrp('f_l_bone_32', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('f_l_bone_32')),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
+	cmds.textFieldGrp('f_l_bone_33', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('f_l_bone_33')),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
 	cmds.columnLayout(p="l_fingers_tab")                          
-	cmds.rowLayout(nc=3)                                      
-	cmds.textFieldGrp('f_l_bone_41', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, 'f_l_bone_41'),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
-	cmds.textFieldGrp('f_l_bone_42', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, 'f_l_bone_42'),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
-	cmds.textFieldGrp('f_l_bone_43', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, 'f_l_bone_43'),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
+	textfields_l_fingers.append (cmds.rowLayout(nc=3))     
+	obj_full_path = full_path_textField (textfields_l_fingers[4])
+	cmds.textFieldGrp('f_l_bone_41', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('f_l_bone_41')),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
+	cmds.textFieldGrp('f_l_bone_42', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('f_l_bone_42')),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
+	cmds.textFieldGrp('f_l_bone_43', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('f_l_bone_43')),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
 	
 	cmds.showWindow()
 
 #--------------------------------------------------------------------------------------------------------------------------------------------	
 def r_fingers_selection_ui():	
 	global r_fngr_wnd
-	r_fngr_wnd=cmds.window(title='Right Hand Fingers',sizeable=False)
+	global textfields_r_fingers
+	textfields_r_fingers = []
+	r_fngr_wnd = cmds.window(title='Right Hand Fingers',sizeable=False, closeCommand= partial(fingers_disabled, 'r'))
 	cmds.columnLayout("r_fingers_tab")
-	cmds.rowLayout(nc=3)
-	cmds.textFieldGrp('f_r_bone_01', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, 'f_r_bone_01'),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
-	cmds.textFieldGrp('f_r_bone_02', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, 'f_r_bone_02'),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
-	cmds.textFieldGrp('f_r_bone_03', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, 'f_r_bone_03'),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
+	textfields_r_fingers.append (cmds.rowLayout(nc=3))
+	obj_full_path = full_path_textField (textfields_r_fingers[0])
+	cmds.textFieldGrp('f_r_bone_01', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('f_r_bone_01')),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
+	cmds.textFieldGrp('f_r_bone_02', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('f_r_bone_02')),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
+	cmds.textFieldGrp('f_r_bone_03', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('f_r_bone_03')),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
 	cmds.columnLayout(p="r_fingers_tab")                          
-	cmds.rowLayout(nc=3)                                      
-	cmds.textFieldGrp('f_r_bone_11', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, 'f_r_bone_11'),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
-	cmds.textFieldGrp('f_r_bone_12', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, 'f_r_bone_12'),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
-	cmds.textFieldGrp('f_r_bone_13', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, 'f_r_bone_13'),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
+	textfields_r_fingers.append (cmds.rowLayout(nc=3))   
+	obj_full_path = full_path_textField (textfields_r_fingers[1])
+	cmds.textFieldGrp('f_r_bone_11', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('f_r_bone_11')),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
+	cmds.textFieldGrp('f_r_bone_12', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('f_r_bone_12')),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
+	cmds.textFieldGrp('f_r_bone_13', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('f_r_bone_13')),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
 	cmds.columnLayout(p="r_fingers_tab")                          
-	cmds.rowLayout(nc=3)                                      
-	cmds.textFieldGrp('f_r_bone_21', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, 'f_r_bone_21'),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
-	cmds.textFieldGrp('f_r_bone_22', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, 'f_r_bone_22'),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
-	cmds.textFieldGrp('f_r_bone_23', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, 'f_r_bone_23'),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
+	textfields_r_fingers.append (cmds.rowLayout(nc=3))   
+	obj_full_path = full_path_textField (textfields_r_fingers[2])
+	cmds.textFieldGrp('f_r_bone_21', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('f_r_bone_21')),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
+	cmds.textFieldGrp('f_r_bone_22', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('f_r_bone_22')),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
+	cmds.textFieldGrp('f_r_bone_23', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('f_r_bone_23')),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
 	cmds.columnLayout(p="r_fingers_tab")                          
-	cmds.rowLayout(nc=3)                                      
-	cmds.textFieldGrp('f_r_bone_31', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, 'f_r_bone_31'),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
-	cmds.textFieldGrp('f_r_bone_32', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, 'f_r_bone_32'),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
-	cmds.textFieldGrp('f_r_bone_33', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, 'f_r_bone_33'),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
+	textfields_r_fingers.append (cmds.rowLayout(nc=3))    
+	obj_full_path = full_path_textField (textfields_r_fingers[3])
+	cmds.textFieldGrp('f_r_bone_31', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('f_r_bone_31')),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
+	cmds.textFieldGrp('f_r_bone_32', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('f_r_bone_32')),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
+	cmds.textFieldGrp('f_r_bone_33', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('f_r_bone_33')),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
 	cmds.columnLayout(p="r_fingers_tab")                          
-	cmds.rowLayout(nc=3)                                      
-	cmds.textFieldGrp('f_r_bone_41', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, 'f_r_bone_41'),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
-	cmds.textFieldGrp('f_r_bone_42', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, 'f_r_bone_42'),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
-	cmds.textFieldGrp('f_r_bone_43', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, 'f_r_bone_43'),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
+	textfields_r_fingers.append (cmds.rowLayout(nc=3))        
+	obj_full_path = full_path_textField (textfields_r_fingers[4])
+	cmds.textFieldGrp('f_r_bone_41', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('f_r_bone_41')),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
+	cmds.textFieldGrp('f_r_bone_42', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('f_r_bone_42')),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
+	cmds.textFieldGrp('f_r_bone_43', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('f_r_bone_43')),  width=120, columnAttach2 = ('left','left'), columnOffset2 = (0,-150) )
 
 	cmds.showWindow()	
-	
+#--------------------------------------------------------------------------------------------------------------------------------------------		
+def extra_bones_selection_ui():	
+	global extra_bones_wnd
+	global textfields_extra
+	extra_bones_wnd = cmds.window(title='Extra Bones',sizeable=False, closeCommand= partial(fingers_disabled, 'extra'))
+	textfields_extra = cmds.columnLayout("extra_bones_tab")
+	obj_full_path = full_path_textField (textfields_extra)
+	cmds.textFieldGrp('extra_bone_01', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('extra_bone_01')),  width=400, columnAttach2 = ('left','left'),columnOffset2 = (0,-130))
+	cmds.textFieldGrp('extra_bone_02', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('extra_bone_02')),  width=400, columnAttach2 = ('left','left'),columnOffset2 = (0,-130))
+	cmds.textFieldGrp('extra_bone_03', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('extra_bone_03')),  width=400, columnAttach2 = ('left','left'),columnOffset2 = (0,-130))
+	cmds.textFieldGrp('extra_bone_04', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('extra_bone_04')),  width=400, columnAttach2 = ('left','left'),columnOffset2 = (0,-130))
+	cmds.textFieldGrp('extra_bone_05', adj=2, label=' ', text ="", textChangedCommand = partial(paste_selected_name, obj_full_path('extra_bone_05')),  width=400, columnAttach2 = ('left','left'),columnOffset2 = (0,-130))
+
+	cmds.showWindow()			
 #------------------------ FUNTIONS ----------------------------------------------------------------------------------------------------------	
 #--------------------------------------------------------------------------------------------------------------------------------------------			
 def curve_filter (objectName, layerName):
@@ -656,20 +698,40 @@ def save_naming_into_file (*args):
 	if update_ctrl_loc_names ():
 		cmds.sysFile( subfolder_path, makeDir=True )
 		file = open (naming_file, "w+")
+		for ctrl_obj in ctrl_objs:
+			file.write (ctrl_obj + "\r\n")
 		for i, line in enumerate (ctrl_names_glob):
 			file.write (line+ "\r\n")
 		file.close()
 	else:
-		print ("Doing Nothing")
+		print ("save fail")
 #--------------------------------------------------------------------------------------------------------------------------------------------		
 def load_naming_from_file (*args):
 	cmds.select(clear=True)
 	if os.path.isfile (naming_file):
 		file = open (naming_file, "r")
 		file_lines = file.readlines()
-		file.close()			
-		for file_line, ctrl_obj in zip (file_lines, ctrl_objs):
-			cmds.textFieldGrp (ctrl_obj,  edit = True, text=(file_line.replace("\r\n",''))) 
+		file.close()	
+		#---- flattened list with paths for each textField controller	
+		flattened_wnd_paths = []
+		flattened_wnd_paths.append(textfields_main)
+		flattened_wnd_paths.append(textfields_extra)
+		for i in range (0, len(textfields_l_fingers)):
+			flattened_wnd_paths.append(textfields_l_fingers[i])
+		for i in range (0, len(textfields_r_fingers)):
+			flattened_wnd_paths.append(textfields_r_fingers[i])				
+		#-------- parsing for full path of controller in windows
+		try_obj_name = lambda wnd, obj_name : full_path_textField(wnd)(obj_name) if cmds.textFieldGrp (full_path_textField(wnd)(obj_name), q=True, exists=True) else False
+		#--------- splitting fields names from their values
+		for i in range (0,(len(file_lines)/2)):
+			obj_name_buff  = file_lines[i].replace("\r\n",'')
+			obj_value_buff = file_lines[i+(len(file_lines)/2)].replace("\r\n",'')		
+			#------ looking for which window this field belongs 
+			for path in flattened_wnd_paths:
+				obj_name = try_obj_name(path,obj_name_buff)
+				if (obj_name):
+					cmds.textFieldGrp (obj_name, edit = True, text=obj_value_buff)
+						
 		update_ctrl_loc_names ()
 		#button_enabling_logic (button_1, button_2, pose1_chk, pose2_chk, pose3_chk, pose4_chk, checkBox_layer_rmv, checkBox_chk)
 	else: 	
@@ -682,28 +744,56 @@ def fingers_enabled (flag,*args):
 	elif (flag =='r'):
 		r_fingers_selection_ui()
 		add_finger ('r')
+	elif (flag=='extra'):
+		extra_bones_selection_ui()
+		add_finger ('extra')
 	
 #--------------------------------------------------------------------------------------------------------------------------------------------	
 def fingers_disabled (flag, *args):
-	print (flag)
-	if (flag=='l'):
-		cmds.window(l_fngr_wnd, edit = True, vis= False)
-	elif (flag =='r'):
-		cmds.window(r_fngr_wnd, edit = True, vis= False)
+
+	# temp commented out
+	#if (flag == 'extra'):
+	#	cmds.window(extra_bones_wnd, edit = True, vis= False)
+	#if (flag=='l'):
+	#	cmds.window(l_fngr_wnd, edit = True, vis= False)
+	#if (flag =='r'):
+	#	cmds.window(r_fngr_wnd, edit = True, vis= False)
+	
+	#temp solution to save some time:
+	if (extra_bones_wnd):
+		if (cmds.window(extra_bones_wnd, q = True, exists= True)):
+			if (cmds.window(extra_bones_wnd, q = True, vis= True)):
+				cmds.window(extra_bones_wnd, edit = True, vis= False)
+	if (l_fngr_wnd):
+		if (cmds.window(l_fngr_wnd, q = True, exists= True)):
+			if (cmds.window(l_fngr_wnd, q = True, vis= True)):
+				cmds.window(l_fngr_wnd, edit = True, vis= False)
+	if (r_fngr_wnd):
+		if (cmds.window(r_fngr_wnd, q = True, exists= True)):
+			if (cmds.window(r_fngr_wnd, q = True, vis= True)):
+				cmds.window(r_fngr_wnd, edit = True, vis= False)
+	#cmds.textFieldGrp (extra_bones_chkbx, value=False, edit=True)
+	#cmds.textFieldGrp (l_fngr_wnd_chkbx, value=False, edit=True)
+	#cmds.textFieldGrp (r_fngr_wnd_chkbx, value=False, edit=True)	
 	reset_ctrl_objs ()
+
 #--------------------------------------------------------------------------------------------------------------------------------------------
 def add_finger (side):
 	global ctrl_objs
+	global ctrl_extra_objs
 	global ctrl_l_fngrs
 	global ctrl_r_fngrs
+	if (side == "extra"):
+		ctrl_objs = ctrl_objs + ctrl_extra_objs	
 	if (side == "l"):
 		ctrl_objs = ctrl_objs + ctrl_l_fngrs
-	elif (side == "r"):
+	if (side == "r"):
 		ctrl_objs = ctrl_objs + ctrl_r_fngrs
 #--------------------------------------------------------------------------------------------------------------------------------------------
 def reset_ctrl_objs ():
 	global ctrl_objs
 	ctrl_objs = 'obj_root', 'obj_spine', 'obj_head', 'obj_l_shoulder', 'obj_r_shoulder', 'obj_l_elbow', 'obj_r_elbow', 'obj_l_hand', 'obj_r_hand'	
+	update_ctrl_loc_names ()
 #--------------------------------------------------------------------------------------------------------------------------------------------
 
 object_selection_ui() 
