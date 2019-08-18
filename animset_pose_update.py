@@ -562,12 +562,13 @@ def paste_poses_by_settings (pose_enum_start, pose_enum_end, frame_offset_start,
 		cmds.currentTime (frame)  		
 		cmds.cutKey (init_pose_locators_glob) # deleting keys for last frame offests fixes 
 		cmds.cutKey (new_pose_locators_glob)  # deleting keys for last frame offests fixes 
+		# moving aligning roots of init and new poses to character root
 		cmds.delete (cmds.pointConstraint (ctrl_names_glob[0], init_pose_locators_glob[0]))
 		cmds.delete (cmds.orientConstraint (ctrl_names_glob[0], init_pose_locators_glob[0], skip=['x','z']))
 		cmds.delete (cmds.pointConstraint (ctrl_names_glob[0], new_pose_locators_glob[0]))
 		cmds.delete (cmds.orientConstraint (ctrl_names_glob[0], new_pose_locators_glob[0], skip=['x','z']))
-		#cmds.setKeyframe ( init_pose_locators_glob, al = new_layer_name_string_glob)
-		#cmds.setKeyframe ( new_pose_locators_glob, al = new_layer_name_string_glob)		
+		#    cmds.setKeyframe ( init_pose_locators_glob, al = new_layer_name_string_glob)
+		#    cmds.setKeyframe ( new_pose_locators_glob, al = new_layer_name_string_glob)		
 		# parenting ctrls to init pose locators
 		iter_ctrl_names = iter (ctrl_names_glob) # iterator to skip parenting roots
 		iter_init_pose_locators = iter (init_pose_locators_glob)
@@ -610,6 +611,27 @@ def paste_poses_by_settings (pose_enum_start, pose_enum_end, frame_offset_start,
 						cmds.parentConstraint (ctrl_names_glob [8], ctrl_names_glob [7], maintainOffset=True, name = "l_hand_to_r_hand_ParentCnst")
 			else:
 				cmds.parentConstraint (ctrl_names_glob [8], ctrl_names_glob [7], maintainOffset=True, name = "l_hand_to_r_hand_ParentCnst")
+	#---------------------------------------------
+	def euler_filter_with_anim_layer_bug_fix (ctrl_name):
+		#creating transform snapshot before filter apply
+		euler_fix_locator = "_loc_euler_fix_"
+		cmds.spaceLocator( p=(0, 0, 0), n=euler_fix_locator)
+		cmds.delete (cmds.parentConstraint (ctrl_name, euler_fix_locator))
+		#euler filter
+		curve_filter (ctrl_name,new_layer_name_string_glob)		
+		#realign to the position before filter
+		locked_attr = cmds.listAttr (ctrl_name, locked = True)
+		if not any ("translate" in attr_test for attr_test in locked_attr):
+			cmds.pointConstraint (euler_fix_locator, ctrl_name, maintainOffset=False, name = "euler_fix_pos_constraint")
+		if not any ("rotate" in attr_test for attr_test in locked_attr):
+			cmds.orientConstraint (euler_fix_locator, ctrl_name, maintainOffset=False, name = "euler_fix_rot_constraint")
+		cmds.setKeyframe ( ctrl_name, al = new_layer_name_string_glob)
+		#cleanup
+		cmds.delete (cmds.ls ("euler_fix_pos_constraint") )
+		cmds.delete (cmds.ls ("euler_fix_rot_constraint") )
+		cmds.delete (cmds.ls (euler_fix_locator) )
+		
+			
 	# ------------ Start -------------------------
 	layer_managment (checkBox_layer_rmv)
 	# setting zero keys at start and end
@@ -645,8 +667,9 @@ def paste_poses_by_settings (pose_enum_start, pose_enum_end, frame_offset_start,
 	if cmds.checkBox (checkBox_chk, value=True, q=True):
 		cmds.currentTime (cmds.playbackOptions( minTime=True, q=True ))
 		l_hand_to_r_hand_const (checkBox_chk)
-	for ctrl_name in ctrl_names_glob:  #euler filtering
-		curve_filter (ctrl_name,new_layer_name_string_glob)
+	for ctrl_name in ctrl_names_glob:  #euler filtering with fix curve_filter() bug of incorrect offsets in animation layers
+		euler_filter_with_anim_layer_bug_fix (ctrl_name)
+	
 #--------------------------------------------------------------------------------------------------------------------------------------------			
 # returns prefix indexes in list in the file name	
 def recognize_file_prefixes (file_name, prefix_list):
@@ -794,6 +817,7 @@ def reset_ctrl_objs ():
 	global ctrl_objs
 	ctrl_objs = 'obj_root', 'obj_spine', 'obj_head', 'obj_l_shoulder', 'obj_r_shoulder', 'obj_l_elbow', 'obj_r_elbow', 'obj_l_hand', 'obj_r_hand'	
 	update_ctrl_loc_names ()
+#--------------------------------------------------------------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------------------------------------------------------
 
 object_selection_ui() 
