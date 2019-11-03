@@ -555,6 +555,7 @@ def paste_poses_by_settings (pose_enum_start, pose_enum_end, frame_offset_start,
 			cmds.animLayer (new_layer_name_string_glob, addSelectedObjects=True, selected=True, preferred=True)
 		else:
 			cmds.animLayer (new_layer_name_string_glob, edit=True, lock=False, mute=False, selected=True, preferred=True, addSelectedObjects=True)
+		cmds.setAttr (new_layer_name_string_glob+'.rotationAccumulationMode', 1)
 		cmds.select (cl=True)	
 	#-----------------------------------------
 	def pasting_procedure (frame):			
