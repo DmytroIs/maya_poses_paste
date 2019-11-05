@@ -1,6 +1,7 @@
 #----------------- debug lib ---------------------------------------------------------------------------------------------------------------------
 import wingdbstub
 wingdbstub.Ensure()
+
 #----------------- Main inludes ------------------------------------------------------------------------------------------------------------------
 from functools import partial
 import maya.cmds as cmds
@@ -316,6 +317,7 @@ def proc_folder(checkBox_chk, pose1_chk, pose2_chk, pose3_chk, pose4_chk, checkB
 	if not check_pose_files_by_settings (pose1_chk, pose2_chk, pose3_chk, pose4_chk):
 		cmds.confirmDialog( title='No Pose File Created', message='Please, use Pick Poses buttons first', button=['Ok'], defaultButton='Ok' )
 	else:
+		custom_prescript ()
 		if update_ctrl_loc_names ():
 			target_files = cmds.getFileList( filespec="*.ma", folder= folder_path)
 			# all files in same folder
@@ -354,6 +356,7 @@ def proc_file(checkBox_chk, pose1_chk, pose2_chk, pose3_chk, pose4_chk, checkBox
 	if not check_pose_files_by_settings (pose1_chk, pose2_chk, pose3_chk, pose4_chk):
 		cmds.confirmDialog( title='No Pose File Created', message='Please, use Pick Poses buttons first', button=['Ok'], defaultButton='Ok' )
 	else:
+		custom_prescript ()
 		if update_ctrl_loc_names ():
 			# collecting prefixes based on settings and recognizing them in the file
 			update_prefix_list (pose1_chk, pose2_chk, pose3_chk, pose4_chk) 
@@ -589,8 +592,16 @@ def paste_poses_by_settings (pose_enum_start, pose_enum_end, frame_offset_start,
 			locked_attr = cmds.listAttr (ctrl_name, locked = True)
 			if not any ("translate" in attr_test for attr_test in locked_attr):
 				cmds.pointConstraint (init_pose_locator, ctrl_name, maintainOffset=True, name = "init_pos_contraint_")
-			if not any ("rotate" in attr_test for attr_test in locked_attr):
-				cmds.orientConstraint (init_pose_locator, ctrl_name, maintainOffset=True, name = "init_rot_contraint_")
+			# skipping locked axis for orientation cnstr, e.g for elbows
+			skip_mask = []
+			if any ("rotateX" in attr_test for attr_test in locked_attr):
+				skip_mask.append('x')
+			if any ("rotateY" in attr_test for attr_test in locked_attr):
+				skip_mask.append('y')
+			if any ("rotateZ" in attr_test for attr_test in locked_attr):
+				skip_mask.append('z')				
+			if not skip_mask==['x', 'y', 'z']:	
+				cmds.orientConstraint (init_pose_locator, ctrl_name, maintainOffset=True, name = "init_rot_contraint_", skip = skip_mask)
 		# aling init locators to new ones
 		cmds.cutKey (init_pose_locators_glob) # deleting keys from 
 		for init_pose_locator, new_pose_locator in zip(init_pose_locators_glob, new_pose_locators_glob):
@@ -631,7 +642,7 @@ def paste_poses_by_settings (pose_enum_start, pose_enum_end, frame_offset_start,
 		cmds.delete (cmds.ls ("euler_fix_pos_constraint") )
 		cmds.delete (cmds.ls ("euler_fix_rot_constraint") )
 		cmds.delete (cmds.ls (euler_fix_locator) )
-		
+		curve_filter (ctrl_name,new_layer_name_string_glob)	 #????????????????
 			
 	# ------------ Start -------------------------
 	layer_managment (checkBox_layer_rmv)
@@ -668,8 +679,8 @@ def paste_poses_by_settings (pose_enum_start, pose_enum_end, frame_offset_start,
 	if cmds.checkBox (checkBox_chk, value=True, q=True):
 		cmds.currentTime (cmds.playbackOptions( minTime=True, q=True ))
 		l_hand_to_r_hand_const (checkBox_chk)
-	for ctrl_name in ctrl_names_glob:  #euler filtering with fix curve_filter() bug of incorrect offsets in animation layers
-		euler_filter_with_anim_layer_bug_fix (ctrl_name)
+	#for ctrl_name in ctrl_names_glob:  #euler filtering with fix curve_filter() bug of incorrect offsets in animation layers
+	#	euler_filter_with_anim_layer_bug_fix (ctrl_name)
 	
 #--------------------------------------------------------------------------------------------------------------------------------------------			
 # returns prefix indexes in list in the file name	
@@ -819,6 +830,22 @@ def reset_ctrl_objs ():
 	ctrl_objs = 'obj_root', 'obj_spine', 'obj_head', 'obj_l_shoulder', 'obj_r_shoulder', 'obj_l_elbow', 'obj_r_elbow', 'obj_l_hand', 'obj_r_hand'	
 	update_ctrl_loc_names ()
 #--------------------------------------------------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------------------------------------------------
+#-------------------------baking hands to IK-------------------------------------------------------------------------------------------------
+
+def custom_prescript ():
+	import maya.mel as mel
+	from machina_apps import fk_ik_switch
+	mel.eval ("""select -r man_average:ArmLeft_hand_IK_CTR ;
+	select -tgl man_average:ArmRight_hand_IK_CTR ;""")
+	reload(fk_ik_switch)
+	fk_ik_switch.quick_fkik_bake()
+	mel.eval ("""CBdeleteConnection "man_average:Root_fkik_ctr.ArmLeftFkIk";
+	CBdeleteConnection "man_average:Root_fkik_ctr.ArmRightFkIk";
+	setAttr "man_average:Root_fkik_ctr.ArmRightFkIk" 0;
+	setAttr "man_average:Root_fkik_ctr.ArmLeftFkIk" 0;""")
+	
+
 #--------------------------------------------------------------------------------------------------------------------------------------------
 
 object_selection_ui() 
