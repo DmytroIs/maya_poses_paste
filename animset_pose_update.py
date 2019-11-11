@@ -593,6 +593,7 @@ def check_pose_files_by_settings (pose1_chk, pose2_chk, pose3_chk, pose4_chk, *a
 def paste_poses_by_settings (pose_enum_start, pose_enum_end, frame_offset_start, frame_offset_end, checkBox_layer_rmv, checkBox_chk, *args):	
 	#-----------------------------------------
 	def layer_managment (checkBox_layer_rmv, *args):
+		cmds.animLayer ("BaseAnimation", edit=True,  lock=False)
 		# deleting old layer
 		if cmds.checkBox (checkBox_layer_rmv, value=True, q=True):
 			if not old_layer_name_string_glob:
