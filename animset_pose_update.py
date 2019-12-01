@@ -918,7 +918,6 @@ def read_namespace_from_naming_file():
 def custom_prescript ():
 	#char_namespace = "man_average"
 	return
-	#------------- ^delete return if backing to FK is needed
 	char_namespace = read_namespace_from_naming_file()
 	if (char_namespace > 0):
 		mel_grabbed_stuff_1 = """select -r NAMESPACE_TMP:ArmLeft_hand_IK_CTR ; 
