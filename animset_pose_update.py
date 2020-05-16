@@ -18,6 +18,7 @@ pose_file_name_2   = subfolder_path + "_pose_2_delta.ma"
 pose_file_name_3   = subfolder_path + "_pose_3_delta.ma"
 pose_file_name_4   = subfolder_path + "_pose_4_delta.ma"
 naming_file        = subfolder_path + "naming.txt"
+
 #----------------- global lists -----------------------------------------------------------------------------------------------------------------
 ctrl_names_glob =[] 
 init_pose_locators_glob =[]  
@@ -56,9 +57,11 @@ textfields_r_fingers = []
 textfields_fk_arms = []
 textfields_legs = []
 
+chkbx_zerokey_option = []
 
 def full_path_textField (window_column):
 	return lambda obj_name: window_column +'|'+ obj_name
+
 
 def object_selection_ui():
 	global main_wnd
@@ -118,6 +121,34 @@ def object_selection_ui():
 	pose4_chk = cmds.checkBox (label="pose 4", value = False, en=False, width=60)
 	cmds.textFieldGrp('file_prefix_4', label='file prefix detect: ', text ="sprint", en=False,  adj=2, width=288, columnAttach2 = ('left','left'), columnOffset2 = (0,-50) )
 	cmds.textFieldGrp('frames_pose_4', label='zero-key layer in:', text ="0", en=False, width=140, columnAttach2 = ('left','left'), columnOffset2 = (0,-50))	
+	cmds.columnLayout (p='main_column')
+	cmds.rowLayout(nc=1)	
+	ui_text_underline = cmds.text( label='  ', height = 5)
+	cmds.columnLayout (p='main_column')
+	cmds.rowLayout(nc=1)		
+	zerokey_option_toogle = cmds.checkBox (label="zero-key selected parts: ", value = False, en=True, width=200)	
+	cmds.columnLayout (p='main_column')
+	cmds.rowLayout(nc=3)
+	zerokey_option_1 = cmds.checkBox (label="root, spine, head",   value = False, en=False, width=132)
+	zerokey_option_2 = cmds.checkBox (label="left_arm_IK",         value = False, en=False, width=122)
+	zerokey_option_3 = cmds.checkBox (label="right_arm_IK",        value = False, en=False, width=85)
+	cmds.columnLayout (p='main_column')
+	cmds.rowLayout(nc=5)	
+	zerokey_option_4 = cmds.checkBox (label="fk arms",             value = False, en=False, width=60)
+	zerokey_option_5 = cmds.checkBox (label="spine_ctrl",          value = False, en=False, width=70)	
+	zerokey_option_6 = cmds.checkBox (label="legs",                value = False, en=False, width=45)
+	zerokey_option_7 = cmds.checkBox (label="left fingers",        value = False, en=False, width=75)
+	zerokey_option_8 = cmds.checkBox (label="right fingers",       value = False, en=False, width=85)
+	chkbx_zerokey_option.append(zerokey_option_toogle)
+	chkbx_zerokey_option.append(zerokey_option_1)
+	chkbx_zerokey_option.append(zerokey_option_2)
+	chkbx_zerokey_option.append(zerokey_option_3)
+	chkbx_zerokey_option.append(zerokey_option_4)
+	chkbx_zerokey_option.append(zerokey_option_5)
+	chkbx_zerokey_option.append(zerokey_option_6)
+	chkbx_zerokey_option.append(zerokey_option_7)
+	chkbx_zerokey_option.append(zerokey_option_8)
+	
 
 #----------------- UI Events Assign --------------------------------------------------------------------------------------------------------		
 	cmds.button(button_1,  edit=True, c= partial (init_pose, button_1, button_2, pose1_chk, pose2_chk, pose3_chk, pose4_chk, checkBox_layer_rmv, checkBox_chk) )  # updating button call function to send buttons ID as argument to enable it
@@ -136,6 +167,8 @@ def object_selection_ui():
 	cmds.checkBox (legs_wnd_chkbx,  edit=True, onCommand = partial(fingers_enabled, 'legs'), offCommand = partial(fingers_disabled, 'legs'))
 	cmds.checkBox (l_fngr_wnd_chkbx, edit=True, onCommand = partial(fingers_enabled, 'l'),       offCommand = partial(fingers_disabled, 'l'))
 	cmds.checkBox (r_fngr_wnd_chkbx, edit=True, onCommand = partial(fingers_enabled, 'r'),       offCommand = partial(fingers_disabled, 'r'))
+	cmds.checkBox (zerokey_option_toogle, edit=True, onCommand = partial(enable_zerokey_options),       offCommand = partial(disable_zerokey_options))
+	
 	cmds.showWindow()
 #--------------------------------------------------------------------------------------------------------------------------------------------			
 def l_fingers_selection_ui():
@@ -320,6 +353,17 @@ def update_ctrl_loc_names ():
 	if '' in ctrl_names_glob:
 		cmds.confirmDialog( title='Empty Ctrl Names', message='Please, add all ctrl names', button=['Ok'], defaultButton='Ok' )
 		return False
+	# checking duplicates
+	seen = set()
+	uniq = []
+	for ctrl_name in ctrl_names_glob:
+		if ctrl_name not in seen:
+			uniq.append (ctrl_name)
+			seen.add (ctrl_name)
+	if (len(ctrl_names_glob)!= len(uniq)):
+		cmds.confirmDialog( title='Duplicated Ctrl Names', message = "Please, don't map same controls to different slots",  button=['Ok'], defaultButton='Ok' )
+		return False		
+	
 	else:
 		# list of locators for initial and new poses 
 		init_pose_prefix = '_loc_init'  
@@ -435,7 +479,10 @@ def create_delta_locators ():
 	iter_init_pose_locators = iter (init_pose_locators_glob)
 	next (iter_init_pose_locators)
 	for init_pose_locator in iter_init_pose_locators:
-		cmds.parent (init_pose_locator, init_pose_locators_glob[0])
+		try:
+			cmds.parent (init_pose_locator, init_pose_locators_glob[0])
+		except:
+			print ("repeated name in the mapping")
 	# creating new pose locators
 	for new_pose_locator in new_pose_locators_glob:
 		cmds.spaceLocator( p=(0, 0, 0), n=new_pose_locator)
@@ -445,7 +492,10 @@ def create_delta_locators ():
 	iter_new_pose_locators = iter (new_pose_locators_glob)
 	next (iter_new_pose_locators)
 	for new_pose_locator in iter_new_pose_locators:
-		cmds.parent (new_pose_locator, new_pose_locators_glob[0])
+		try:
+			cmds.parent (new_pose_locator, new_pose_locators_glob[0])
+		except:
+			print ("repeated name in the mapping ")
 #--------------------------------------------------------------------------------------------------------------------------------------------	
 def button_enabling_logic (init_pose_button, new_pose_button, pose1_chk, pose2_chk, pose3_chk, pose4_chk, checkBox_layer_rmv, checkBox_chk,  *args):		
 	#  bone names first
@@ -692,6 +742,49 @@ def paste_poses_by_settings (pose_enum_start, pose_enum_end, frame_offset_start,
 		cmds.delete (cmds.ls ("euler_fix_rot_constraint") )
 		cmds.delete (cmds.ls (euler_fix_locator) )
 		curve_filter (ctrl_name,new_layer_name_string_glob)	 
+	#---------------------------------------------
+	def custom_zerokey_setup ():
+		flag = []
+		for chkbx in chkbx_zerokey_option:
+			flag.append (cmds.checkBox (chkbx, value=True, q=True))
+		if flag[0]:
+			obj_list_to_key = []
+			print ("DEBUG: option is on")
+			if flag[1]:
+				obj_list_to_key.append ( cmds.textFieldGrp ('obj_root',  text=True, q=True) )
+				obj_list_to_key.append ( cmds.textFieldGrp ('obj_spine', text=True, q=True) )
+				obj_list_to_key.append ( cmds.textFieldGrp ('obj_head',  text=True, q=True) )
+			if flag[2]:
+				obj_list_to_key.append ( cmds.textFieldGrp ('obj_l_shoulder',  text=True, q=True) )
+				obj_list_to_key.append ( cmds.textFieldGrp ('obj_l_elbow',     text=True, q=True) )
+				obj_list_to_key.append ( cmds.textFieldGrp ('obj_l_hand',      text=True, q=True) )
+			if flag[3]:
+				obj_list_to_key.append ( cmds.textFieldGrp ('obj_r_shoulder',  text=True, q=True) )
+				obj_list_to_key.append ( cmds.textFieldGrp ('obj_r_elbow',     text=True, q=True) )
+				obj_list_to_key.append ( cmds.textFieldGrp ('obj_r_hand',      text=True, q=True) )
+			if flag[4]:
+				for ctrl_fk_arm in ctrl_fk_arms:
+					obj_list_to_key.append ( cmds.textFieldGrp (ctrl_fk_arm, text=True, q=True) )
+			if flag[5]:
+				for ctrl_extra_obj in ctrl_extra_objs:
+					obj_list_to_key.append ( cmds.textFieldGrp (ctrl_extra_obj, text=True, q=True) )				
+			if flag[6]:
+				for ctrl_leg in ctrl_legs:
+					obj_list_to_key.append ( cmds.textFieldGrp (ctrl_leg, text=True, q=True) )				
+			if flag[7]:
+				for ctrl_l_fngr in ctrl_l_fngrs:
+					obj_list_to_key.append ( cmds.textFieldGrp (ctrl_l_fngr, text=True, q=True) )				
+			if flag[8]:
+				for ctrl_r_fngr in ctrl_r_fngrs:
+					obj_list_to_key.append ( cmds.textFieldGrp (ctrl_r_fngr, text=True, q=True) )				
+			
+			print ("DEBUG: keying objs list:")
+			print (obj_list_to_key)			
+			cmds.setKeyframe ( obj_list_to_key, al = new_layer_name_string_glob)
+			return True
+		else:
+			print ("DEBUG: option is oFF")
+			return False
 			
 	# ------------ Start -------------------------
 	layer_managment (checkBox_layer_rmv)
@@ -703,10 +796,12 @@ def paste_poses_by_settings (pose_enum_start, pose_enum_end, frame_offset_start,
 	# setting zero keys in the middle if specified
 	if (int(frame_offset_start) != 0):
 		cmds.currentTime ( (cmds.playbackOptions( minTime=True, q=True )) + int (frame_offset_start ))
-		cmds.setKeyframe ( ctrl_names_glob, al = new_layer_name_string_glob)
+		if not custom_zerokey_setup():		
+			cmds.setKeyframe ( ctrl_names_glob, al = new_layer_name_string_glob)
 	if (int(frame_offset_end) != 0):
 		cmds.currentTime ( (cmds.playbackOptions( maxTime=True, q=True )) - int (frame_offset_end ))
-		cmds.setKeyframe ( ctrl_names_glob, al = new_layer_name_string_glob)
+		if not custom_zerokey_setup():	
+			cmds.setKeyframe ( ctrl_names_glob, al = new_layer_name_string_glob)
 	if pose_enum_start:
 		load_pose_file (pose_enum_start)
 		pasting_procedure ( cmds.playbackOptions( minTime=True, q=True ))			
@@ -799,13 +894,18 @@ def load_naming_from_file (*args):
 		#---- flattened list with paths for each textField controller	
 		flattened_wnd_paths = []
 		flattened_wnd_paths.append(textfields_main)
-		flattened_wnd_paths.append(textfields_fk_arms)		
-		flattened_wnd_paths.append(textfields_extra)
-		flattened_wnd_paths.append(textfields_legs)
-		for i in range (0, len(textfields_l_fingers)):
-			flattened_wnd_paths.append(textfields_l_fingers[i])
-		for i in range (0, len(textfields_r_fingers)):
-			flattened_wnd_paths.append(textfields_r_fingers[i])				
+		if textfields_fk_arms:
+			flattened_wnd_paths.append(textfields_fk_arms)
+		if textfields_extra:
+			flattened_wnd_paths.append(textfields_extra)
+		if textfields_legs:
+			flattened_wnd_paths.append(textfields_legs)
+		if textfields_l_fingers:	
+			for i in range (0, len(textfields_l_fingers)):
+				flattened_wnd_paths.append(textfields_l_fingers[i])
+		if textfields_r_fingers:
+			for i in range (0, len(textfields_r_fingers)):
+				flattened_wnd_paths.append(textfields_r_fingers[i])				
 		#-------- parsing for full path of controller in windows
 		try_obj_name = lambda wnd, obj_name : full_path_textField(wnd)(obj_name) if cmds.textFieldGrp (full_path_textField(wnd)(obj_name), q=True, exists=True) else False
 		#--------- splitting fields names from their values
@@ -901,7 +1001,25 @@ def reset_ctrl_objs ():
 	ctrl_objs = 'obj_root', 'obj_spine', 'obj_head', 'obj_l_shoulder', 'obj_r_shoulder', 'obj_l_elbow', 'obj_r_elbow', 'obj_l_hand', 'obj_r_hand'	
 	update_ctrl_loc_names ()
 #--------------------------------------------------------------------------------------------------------------------------------------------
+def enable_zerokey_options (args):
+	for chkbx in chkbx_zerokey_option:
+		cmds.checkBox (chkbx, edit=True, en=True)
 #--------------------------------------------------------------------------------------------------------------------------------------------
+def disable_zerokey_options (args):
+	iter_chkbx_zerokey_option = iter(chkbx_zerokey_option)
+	next (iter_chkbx_zerokey_option)
+	for chkbx in iter_chkbx_zerokey_option:
+		cmds.checkBox (chkbx, edit=True, en=False)
+#--------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
 #-------------------------Extracting namespace-------------------------------------------------------------------------------------------------
 def read_namespace_from_naming_file():
 	if  os.path.isfile (naming_file):
